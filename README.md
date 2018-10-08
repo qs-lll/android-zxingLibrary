@@ -1,6 +1,12 @@
 # android-zxingLibrary
 
 
+#####因为扫码界面太丑了, 做了个优化
+
+----
+
+![image](/images/WX20181008-135304.png)
+
 **更新日志**
 
 - compile 1.3 2016/08/02 优化扫描API
