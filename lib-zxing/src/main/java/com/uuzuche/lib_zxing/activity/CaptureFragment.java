@@ -16,6 +16,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.Result;
@@ -23,6 +24,7 @@ import com.uuzuche.lib_zxing.R;
 import com.uuzuche.lib_zxing.camera.CameraManager;
 import com.uuzuche.lib_zxing.decoding.CaptureActivityHandler;
 import com.uuzuche.lib_zxing.decoding.InactivityTimer;
+import com.uuzuche.lib_zxing.view.ScanView;
 import com.uuzuche.lib_zxing.view.ViewfinderView;
 
 import java.io.IOException;
@@ -37,6 +39,7 @@ public class CaptureFragment extends Fragment implements SurfaceHolder.Callback 
     private ViewfinderView viewfinderView;
     private boolean hasSurface;
     private Vector<BarcodeFormat> decodeFormats;
+    private ScanView sv;
     private String characterSet;
     private InactivityTimer inactivityTimer;
     private MediaPlayer mediaPlayer;
@@ -75,10 +78,43 @@ public class CaptureFragment extends Fragment implements SurfaceHolder.Callback 
         if (view == null) {
             view = inflater.inflate(R.layout.fragment_capture, null);
         }
-
-        viewfinderView = (ViewfinderView) view.findViewById(R.id.viewfinder_view);
+        sv = (ScanView) view.findViewById(R.id.sv);
+        viewfinderView = new ViewfinderView(getContext());
         surfaceView = (SurfaceView) view.findViewById(R.id.preview_view);
+        view.findViewById(R.id.mo_scanner_back).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (getActivity() != null) {
+                    getActivity().finish();
+                }
+            }
+        });
+        view.findViewById(R.id.iv_flash).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (camera != null) {
+                    try {
+                        Camera.Parameters parameters = camera.getParameters();
+                        if (Camera.Parameters.FLASH_MODE_OFF.equals(parameters.getFlashMode())) {
+                            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
+                            camera.setParameters(parameters);
+
+                            ((ImageView) v).setImageResource(R.drawable.icon_flashlight_pre);
+                        } else if (Camera.Parameters.FLASH_MODE_TORCH.equals(parameters.getFlashMode())) {
+                            parameters.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
+                            camera.setParameters(parameters);
+                            ((ImageView) v).setImageResource(R.drawable.icon_flashlight);
+                        }
+                    } catch (Exception e) {
+
+                    }
+
+                }
+            }
+        });
         surfaceHolder = surfaceView.getHolder();
+        sv.setType(1);
+        sv.startScan();
 
         return view;
     }
@@ -100,6 +136,9 @@ public class CaptureFragment extends Fragment implements SurfaceHolder.Callback 
         if (audioService.getRingerMode() != AudioManager.RINGER_MODE_NORMAL) {
             playBeep = false;
         }
+        if (sv != null) {
+            sv.onResume();
+        }
         initBeepSound();
         vibrate = true;
     }
@@ -110,6 +149,9 @@ public class CaptureFragment extends Fragment implements SurfaceHolder.Callback 
         if (handler != null) {
             handler.quitSynchronously();
             handler = null;
+        }
+        if (sv != null) {
+            sv.onPause();
         }
         CameraManager.get().closeDriver();
     }
@@ -211,7 +253,7 @@ public class CaptureFragment extends Fragment implements SurfaceHolder.Callback 
             mediaPlayer.setOnCompletionListener(beepListener);
 
             AssetFileDescriptor file = getResources().openRawResourceFd(
-                    R.raw.beep);
+                    R.raw.qrcode);
             try {
                 mediaPlayer.setDataSource(file.getFileDescriptor(),
                         file.getStartOffset(), file.getLength());
@@ -266,6 +308,7 @@ public class CaptureFragment extends Fragment implements SurfaceHolder.Callback 
     interface CameraInitCallBack {
         /**
          * Callback for Camera init result.
+         *
          * @param e If is's null,means success.otherwise Camera init failed with the Exception.
          */
         void callBack(Exception e);

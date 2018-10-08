@@ -29,5 +29,9 @@
     <color name="viewfinder_mask">#60000000</color>
     <color name="header">#58567D</color>
     <color name="grgray">#686868</color>
+    <color name="common_color">#ff5f00</color>
+    <color name="color_b3ffffff">#b3ffffff</color>
+    <color name="color_FFFFFF">#FFFFFF</color>
+    <color name="color_ffffff">#ffffff</color>
 
 </resources>
